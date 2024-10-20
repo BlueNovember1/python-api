@@ -73,14 +73,13 @@ $ curl -X POST 127.0.0.1:5000/
 
 ## Zrzuty ekranu
 
-- **Zrzut 1**: Tworzenie instancji EC2 (BUILD i TEST)
-- **Zrzut 2**: Połączenie z maszyną BUILD
-- **Zrzut 3**: Budowanie pakietu aplikacji na maszynie BUILD
+
+
 
 ## Sposób realizacji zadań
 
 ### Maszyna BUILD
-
+![Ścieżka plików](images/ls.png)
 #### Tworzenie instancji EC2:
 - Tworzymy nową instancję EC2 z Amazon Linux 2.
 - Konfigurujemy grupy zabezpieczeń, aby umożliwić połączenie SSH.
@@ -137,6 +136,7 @@ gh release create $VERSION $WHEEL_FILE --notes "Release $VERSION"
 RELEASE_URL="https://github.com/BlueNovember1/python-api/releases/tag/$VERSION"
 echo ">>> Wydanie dostępne pod adresem: $RELEASE_URL"
 ```
+![Poprawnie uruchomiony plik build_script.sh](images/build_sukces.png)
 ### Maszyna Test
 #### Tworzenie instancji EC2:
 - Tworzymy nową instancję EC2 z Amazon Linux 2.
@@ -159,6 +159,7 @@ wget --header="Authorization: token $GITHUB_TOKEN" $LATEST_RELEASE_URL -O $WHL_F
 echo ">>> Pobieranie pliku ZIP z kodem źródłowym z GitHub..."
 wget --header="Authorization: token $GITHUB_TOKEN" $ZIP_URL -O $ZIP_FILE
 ```
+![Przykład wygenrowanego wydania](images/Relase.png)
 
 #### Rozpakowanie kodu źródłowego
 ```sh
@@ -208,6 +209,7 @@ unzip $ZIP_FILE -d $INSTALL_DIR/source_code
     ```bash
     bash tests.sh
     ```
+    ![Poprawnie przeprowadzone 3 testy](images/test_test_sukces.png)
     
 
 ## Wnioski
