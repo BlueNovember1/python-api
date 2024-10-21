@@ -1,0 +1,72 @@
+#!/bin/bash
+
+# Ustawienia
+APP_NAME="python-api"
+INSTALL_DIR="/home/ec2-user/$APP_NAME"
+GITHUB_REPO="https://github.com/BlueNovember1/python-api"
+LATEST_RELEASE_URL="https://github.com/BlueNovember1/python-api/releases/latest/download/python_api-1.0.0-py3-none-any.whl"
+ZIP_URL="https://github.com/BlueNovember1/python-api/archive/refs/tags/v1.0.zip"  # URL do pliku ZIP
+VENV_DIR="$INSTALL_DIR/venv"
+WHL_FILE="python_api-1.0.0-py3-none-any.whl"
+ZIP_FILE="$APP_NAME-source.zip"
+GITHUB_TOKEN=":)"
+
+echo ">>> Przygotowywanie środowiska wykonawczego aplikacji..."
+
+# 1. Przygotuj środowisko wykonawcze aplikacji
+mkdir -p $INSTALL_DIR
+cd $INSTALL_DIR
+
+# Tworzenie wirtualnego środowiska Python
+echo ">>> Tworzenie wirtualnego środowiska..."
+sudo yum update -y
+sudo yum install -y python3 unzip
+python3 -m ensurepip --upgrade  # Jeśli pip nie jest dostępny, zostanie zainstalowany
+python3 -m venv $VENV_DIR  # Tworzenie wirtualnego środowiska
+source $VENV_DIR/bin/activate  # Aktywacja wirtualnego środowiska
+pip install werkzeug==2.0.3
+pip install Flask==2.0.3
+# 2. Pobierz z repozytorium najnowsze wydanie aplikacji
+echo ">>> Pobieranie najnowszego wydania aplikacji z GitHub (plik .whl)..."
+wget --header="Authorization: token $GITHUB_TOKEN" $LATEST_RELEASE_URL -O $WHL_FILE
+
+echo ">>> Pobieranie pliku ZIP z kodem źródłowym z GitHub..."
+wget --header="Authorization: token $GITHUB_TOKEN" $ZIP_URL -O $ZIP_FILE
+
+# 3. Rozpakowanie kodu źródłowego
+echo ">>> Rozpakowywanie pliku ZIP..."
+unzip $ZIP_FILE -d $INSTALL_DIR/source_code
+
+# 4. Zainstaluj aplikację z pliku .whl
+echo ">>> Instalowanie aplikacji z pliku .whl..."
+$VENV_DIR/bin/pip install --upgrade pip  # Aktualizacja pip
+$VENV_DIR/bin/pip install $WHL_FILE  # Instalacja aplikacji z pliku .whl
+
+# 5. Skonfiguruj system, aby uruchamiał aplikację po restarcie
+echo ">>> Konfiguracja systemu dla uruchamiania aplikacji po restarcie..."
+
+# Tworzenie pliku usługi systemowej dla aplikacji
+SERVICE_FILE="/etc/systemd/system/$APP_NAME.service"
+
+sudo bash -c "cat > $SERVICE_FILE" <<EOL
+[Unit]
+Description=Python API Application
+After=network.target
+
+[Service]
+User=ec2-user
+WorkingDirectory=$INSTALL_DIR
+Environment="PATH=$VENV_DIR/bin"
+ExecStart=$VENV_DIR/bin/python3 -m flask run --host=0.0.0.0 --port=5000
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOL
+
+# 6. Uruchom usługę i dodaj ją do automatycznego uruchamiania po restarcie
+sudo systemctl daemon-reload
+sudo systemctl enable $APP_NAME
+sudo systemctl start $APP_NAME
+
+echo ">>> Instalacja zakończona. Aplikacja $APP_NAME jest uruchomiona i skonfigurowana do startu po restarcie."

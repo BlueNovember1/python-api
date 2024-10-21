@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Test dymny - sprawdzenie, czy API zwraca listę dni
+echo "Running smoke test..."
+response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000)
+if [ "$response" -eq 200 ]; then
+    echo "Smoke test passed: API is working."
+else
+    echo "Smoke test failed: API is not working."
+    exit 1
+fi
+
+# Dodatkowy test - sprawdzenie, czy API zwraca poprawny dzień
+echo "Running specific day test..."
+response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/1)
+if [ "$response" -eq 200 ]; then
+    echo "Specific day test passed: API returned correct day."
+else
+    echo "Specific day test failed: API did not return correct day."
+    exit 1
+fi
+
+# Test błędu 404 dla nieistniejącego dnia
+echo "Running 404 test for non-existent day..."
+response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/10)
+if [ "$response" -eq 404 ]; then
+    echo "404 test passed: Correctly handled non-existent day."
+else
+    echo "404 test failed: Did not handle non-existent day correctly."
+    exit 1
+fi

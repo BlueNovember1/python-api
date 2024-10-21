@@ -1,0 +1,56 @@
+# Ustawienia
+REPO_URL="https://github.com/BlueNovember1/python-api.git"  # Twoje repozytorium
+BUILD_DIR="/home/ec2-user/build"
+VERSION="v$(date +'%Y%m%d%H%M')"  # automatyczna nazwa wersji bazująca na dacie i czasie
+
+echo ">>> Klonowanie repozytorium..."
+rm -rf $BUILD_DIR  # usuń poprzednie pliki budowania
+git clone $REPO_URL $BUILD_DIR
+
+cd $BUILD_DIR
+
+# środowisko wykonawcze
+echo ">>> Tworzenie wirtualnego środowiska..."
+python3 -m venv venv
+source venv/bin/activate
+
+# Zainstaluj wymagane zależności
+echo ">>> Instalowanie zależności..."
+pip install --upgrade pip
+pip install -r requirements.txt
+pip install wheel 
+# pakiet instalacyjny aplikacji - wheel
+echo ">>> Budowanie pakietu instalacyjnego..."
+python3 /home/ec2-user/build/setup.py bdist_wheel
+
+# Sprawdź, czy pakiet został zbudowany
+WHEEL_FILE=$(find dist -name "*.whl")
+if [ -z "$WHEEL_FILE" ]; then
+    echo ">>> Błąd: nie udało się zbudować pakietu .whl."
+    exit 1
+else
+    echo ">>> Pakiet zbudowany: $WHEEL_FILE"
+fi
+
+echo ">>> Logowanie do GitHub z tokenem..."
+echo "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" | gh auth login --with-token
+
+# Wybór repozytorium
+echo ">>> Ustawianie repozytorium BlueNovember1/python-api jako domyślne..."
+gh repo set-default BlueNovember1/python-api
+
+# Tworzenie wydania
+echo ">>> Tworzenie nowego wydania na GitHub..."
+gh release create $VERSION $WHEEL_FILE --notes "Release $VERSION"
+
+# Generowanie linku do wydania
+RELEASE_URL="https://github.com/BlueNovember1/python-api/releases/tag/$VERSION"
+echo ">>> Wydanie dostępne pod adresem: $RELEASE_URL"
+
+# Wyczyść środowisko budowania aplikacji
+echo ">>> Czyszczenie środowiska..."
+deactivate  # wyłącz wirtualne środowisko
+rm -rf venv  # usuń wirtualne środowisko
+rm -rf build dist *.egg-info  # usuń pozostałe pliki
+
+echo ">>> Proces budowania zakończony. Wydanie $VERSION zostało utworzone."
