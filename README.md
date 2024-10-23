@@ -71,11 +71,6 @@ $ curl -X POST 127.0.0.1:5000/
 - Zawiera plik all_install.sh wykonujący pobranie, rozpakowanie kodu źródłowego wraz z plikiem wheel i niezbędnymi pakietami.
 - Zawiera plik tests.sh wykonujący test dymny i dwa kolejne sprawdzające działanie aplkiacji.
 
-## Zrzuty ekranu
-
-
-
-
 ## Sposób realizacji zadań
 
 ### Maszyna BUILD
@@ -187,6 +182,7 @@ unzip $ZIP_FILE -d $INSTALL_DIR/source_code
     WorkingDirectory=/home/ec2-user/
     Environment="PATH=/home/ec2-user/venv/bin"
     ExecStart=/home/ec2-user/venv/bin/python3 -m flask run --host=0.0.0.0 --port=5000
+    ExecStart=$VENV_DIR/bin/python3 -m flask run --host=0.0.0.0 --port=5000
     Restart=always
 
     [Install]
